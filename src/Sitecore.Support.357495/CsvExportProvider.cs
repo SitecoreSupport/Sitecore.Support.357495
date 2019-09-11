@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Sitecore.Configuration;
 
-namespace Sitecore.ExperienceForms.Client.Data.CsvExportProvider
+namespace Sitecore.Support.ExperienceForms.Client.Data
 {
     public class CsvExportProvider : IExportDataProvider
     {
-        private const string Delimiter = ";";
+        private static readonly string delimiter = Settings.GetSetting("Sitecore.ExperienceForms.ExportDataDelimiter", ",");
 
         private readonly IFormDataProvider _formDataProvider;
 
@@ -67,20 +68,20 @@ namespace Sitecore.ExperienceForms.Client.Data.CsvExportProvider
             {
                 return string.Empty;
             }
-            stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "Created{0}", ";");
-            stringBuilder.AppendLine(string.Join(";", (from f in fieldColumnsList
+            stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "Created{0}", delimiter);
+            stringBuilder.AppendLine(string.Join(delimiter, (from f in fieldColumnsList
                                                        select f.FieldName).ToArray()));
             int count = fieldColumnsList.Count;
             foreach (FormEntry item2 in orderedEnumerable)
             {
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0:yyyy-MM-dd HH:mm}{1}", item2.Created, ";");
+                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0:yyyy-MM-dd HH:mm}{1}", item2.Created, delimiter);
                 string[] array = new string[count];
                 for (int i = 0; i < count; i++)
                 {
                     FieldData fieldItem = fieldColumnsList[i];
                     array[i] = EscapeCsvDelimiters(item2.Fields.FirstOrDefault((FieldData f) => f.FieldItemId == fieldItem.FieldItemId)?.Value);
                 }
-                stringBuilder.AppendLine(string.Join(";", array));
+                stringBuilder.AppendLine(string.Join(delimiter, array));
             }
             return stringBuilder.ToString();
         }
@@ -90,7 +91,7 @@ namespace Sitecore.ExperienceForms.Client.Data.CsvExportProvider
             if (!string.IsNullOrEmpty(fieldValue))
             {
                 fieldValue = fieldValue.Replace("\"", "\"\"");
-                if (fieldValue.IndexOf(Environment.NewLine, 0, StringComparison.OrdinalIgnoreCase) >= 0 || fieldValue.IndexOf(";", StringComparison.OrdinalIgnoreCase) >= 0 || fieldValue.IndexOf("\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                if (fieldValue.IndexOf(Environment.NewLine, 0, StringComparison.OrdinalIgnoreCase) >= 0 || fieldValue.IndexOf(delimiter, StringComparison.OrdinalIgnoreCase) >= 0 || fieldValue.IndexOf("\"", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     fieldValue = FormattableString.Invariant($"\"{fieldValue}\"");
                 }
